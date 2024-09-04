@@ -1,29 +1,35 @@
 trigger:
   branches:
     include:
-      - main
+      - main  # Specify the branch to trigger the pipeline
 
 pool:
   vmImage: 'ubuntu-latest'
 
 steps:
-- task: UsePhpVersion@0
-  inputs:
-    versionSpec: '8.x'
-  displayName: 'Set PHP version'
+# Step 1: Install the required PHP version
+- script: |
+    sudo add-apt-repository ppa:ondrej/php
+    sudo apt-get update
+    sudo apt-get install -y php8.0 php8.0-cli php8.0-mbstring php8.0-xml
+    php -v
+  displayName: 'Install PHP 8.0'
 
+# Step 2: Install Composer dependencies and set up the environment
 - script: |
     composer install --no-interaction --no-progress --prefer-dist
     cp .env.example .env
     php artisan key:generate
   displayName: 'Install dependencies and setup environment'
 
+# Step 3: Copy files to the staging directory
 - task: CopyFiles@2
   inputs:
     contents: '**'
     targetFolder: '$(Build.ArtifactStagingDirectory)'
   displayName: 'Copy files to staging directory'
 
+# Step 4: Archive the application files
 - task: ArchiveFiles@2
   inputs:
     rootFolderOrFile: '$(Build.ArtifactStagingDirectory)'
@@ -33,15 +39,17 @@ steps:
     replaceExistingArchive: true
   displayName: 'Archive application files'
 
+# Step 5: Publish the build artifacts
 - task: PublishBuildArtifacts@1
   inputs:
     PathtoPublish: '$(Build.ArtifactStagingDirectory)'
     ArtifactName: 'drop'
   displayName: 'Publish artifact'
 
+# Step 6: Deploy to Azure Web App
 - task: AzureWebApp@1
   inputs:
-    azureSubscription: '<Your Azure Subscription>'
-    appName: '<Your App Service Name>'
+    azureSubscription: '<Your Azure Subscription>'  # Replace with your Azure subscription name
+    appName: '<Your App Service Name>'  # Replace with your Azure Web App name
     package: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
   displayName: 'Deploy to Azure Web App'

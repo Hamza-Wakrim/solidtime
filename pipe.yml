@@ -49,7 +49,7 @@ steps:
 # Step 6: Deploy to Azure Web App
 - task: AzureWebApp@1
   inputs:
-    azureSubscription: '<Your Azure Subscription>'  # Replace with your Azure subscription name
+    azureSubscription: 'github-connection'  # Replace with your Azure subscription name
     appName: '<Your App Service Name>'  # Replace with your Azure Web App name
     package: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
   displayName: 'Deploy to Azure Web App'

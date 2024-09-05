@@ -50,6 +50,6 @@ steps:
 - task: AzureWebApp@1
   inputs:
     azureSubscription: 'github-connection'  # Replace with your Azure subscription name
-    appName: '<Your App Service Name>'  # Replace with your Azure Web App name
+    appName: 'testing-work'  # Replace with your Azure Web App name
     package: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
   displayName: 'Deploy to Azure Web App'

@@ -11,9 +11,9 @@ steps:
 - script: |
     sudo add-apt-repository ppa:ondrej/php
     sudo apt-get update
-    sudo apt-get install -y php8.0 php8.0-cli php8.0-mbstring php8.0-xml
+    sudo apt-get install -y php8.2 php8.2-cli php8.2-mbstring php8.0-xml
     php -v
-  displayName: 'Install PHP 8.0'
+  displayName: 'Install PHP 8.2'
 
 # Step 2: Install Composer dependencies and set up the environment
 - script: |

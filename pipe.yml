@@ -2,7 +2,7 @@ variables:
   DB_CONNECTION: 'pgsql'  
   DB_HOST: 'pg-freelancer.postgres.database.azure.com'  
   DB_PORT: '5432'  
-  DB_DATABASE: 'postgres'  
+  DB_DATABASE: 'db_test'  
   DB_USERNAME: 'admin_pg_freelancer'  
   DB_PASSWORD: 'DI=47]lF_?DY0h13'
   RESOURCE_GROUP: 'freelancer-test'

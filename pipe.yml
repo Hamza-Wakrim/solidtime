@@ -41,6 +41,7 @@ steps:
   displayName: 'Install dependencies and setup environment'
 
 # Step 3: Ensure PostgreSQL Server and Database
+# Step 3: Ensure PostgreSQL Server and Database
 - script: |
     az postgres flexible-server show --name $(POSTGRESQL_SERVER_NAME) --resource-group $(RESOURCE_GROUP) || \
     az postgres flexible-server create \
@@ -48,7 +49,7 @@ steps:
       --name $(POSTGRESQL_SERVER_NAME) \
       --location $(LOCATION) \
       --admin-user $(DB_USERNAME) \
-      --admin-password $(DB_PASSWORD) \
+      --admin-password '$(DB_PASSWORD)' \
       --sku-name Standard_B1ms \
       --version 13 \
       --public-access 0.0.0.0

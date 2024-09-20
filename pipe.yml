@@ -5,8 +5,6 @@ variables:
   DB_DATABASE: 'db_test'  
   DB_USERNAME: 'admin_pg_freelancer'  
   DB_PASSWORD: 'DI=47]lF_?DY0h13'
-  RESOURCE_GROUP: 'freelancer-test'
-  LOCATION: 'testing-work'
 
 trigger:
   branches:
@@ -39,19 +37,14 @@ steps:
     php artisan key:generate
   displayName: 'Install dependencies and setup environment'
 
-# Step 3: Run migrations (If necessary)
-- script: |
-    php artisan migrate --seed --force
-  displayName: 'Run Laravel Migrations'
-
-# Step 4: Copy files to the staging directory
+# Step 3: Copy files to the staging directory
 - task: CopyFiles@2
   inputs:
     contents: '**'
     targetFolder: '$(Build.ArtifactStagingDirectory)'
   displayName: 'Copy files to staging directory'
 
-# Step 5: Archive the application files
+# Step 4: Archive the application files
 - task: ArchiveFiles@2
   inputs:
     rootFolderOrFile: '$(Build.ArtifactStagingDirectory)'
@@ -61,17 +54,18 @@ steps:
     replaceExistingArchive: true
   displayName: 'Archive application files'
 
-# Step 6: Publish the build artifacts
+# Step 5: Publish the build artifacts
 - task: PublishBuildArtifacts@1
   inputs:
     PathtoPublish: '$(Build.ArtifactStagingDirectory)'
     ArtifactName: 'drop'
   displayName: 'Publish artifact'
   
-# Step 7: Deploy to Azure Web App
+# Step 6: Deploy to Azure Web App and extract to wwwroot
 - task: AzureWebApp@1
   inputs:
     azureSubscription: 'azure-connection'  # Replace with your Azure subscription name
     appName: 'testing-work'  # Replace with your Azure Web App name
     package: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
+    deploymentMethod: 'zipDeploy'
   displayName: 'Deploy to Azure Web App'

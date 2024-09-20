@@ -1,18 +1,23 @@
-variables:  
-  DB_CONNECTION: 'pgsql'  
-  DB_HOST: 'pg-freelancer.postgres.database.azure.com'  
-  DB_PORT: '5432'  
-  DB_DATABASE: 'db_test'  
-  DB_USERNAME: 'admin_pg_freelancer'  
-  DB_PASSWORD: 'DI=47]lF_?DY0h13'
-
 trigger:
   branches:
     include:
-      - main
+      - main  # Specify the branch to trigger the pipeline
 
 pool:
   vmImage: 'ubuntu-latest'
+
+variables:
+  DB_CONNECTION: 'pgsql'
+  DB_HOST: 'pg-freelancer.postgres.database.azure.com'
+  DB_PORT: '5432'
+  DB_DATABASE: 'db_test'
+  DB_USERNAME: 'admin_pg_freelancer'
+  DB_PASSWORD: 'DI=47]lF_?DY0h13'
+  RESOURCE_GROUP: 'freelancer-test'
+  POSTGRESQL_SERVER_NAME: 'pg-freelancer'
+  LOCATION: 'eastus'
+  AZURE_APP_NAME: 'testing-work'  # Replace with your Azure Web App name
+  AZURE_SUBSCRIPTION: 'azure-connection'  # Replace with your Azure subscription name
 
 steps:
 # Step 1: Install PHP 8.3 and necessary extensions
@@ -60,12 +65,18 @@ steps:
     PathtoPublish: '$(Build.ArtifactStagingDirectory)'
     ArtifactName: 'drop'
   displayName: 'Publish artifact'
-  
-# Step 6: Deploy to Azure Web App and extract to wwwroot
+
+# Step 6: Deploy to Azure Web App (Upload to /home/site/wwwroot/)
 - task: AzureWebApp@1
   inputs:
-    azureSubscription: 'azure-connection'  # Replace with your Azure subscription name
-    appName: 'testing-work'  # Replace with your Azure Web App name
+    azureSubscription: '$(AZURE_SUBSCRIPTION)'  # Replace with your Azure subscription name
+    appName: '$(AZURE_APP_NAME)'  # Replace with your Azure Web App name
     package: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
     deploymentMethod: 'zipDeploy'
   displayName: 'Deploy to Azure Web App'
+
+# Step 7: Set file permissions in /home/site/wwwroot
+- script: |
+    sudo chown -R www-data:www-data /home/site/wwwroot
+    sudo chmod -R 755 /home/site/wwwroot
+  displayName: 'Set correct file permissions'

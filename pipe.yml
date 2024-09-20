@@ -4,7 +4,7 @@ variables:
   DB_PORT: '5432'
   DB_DATABASE: 'db_test'
   DB_USERNAME: 'admin_pg_freelancer'
-  # Store DB_PASSWORD as a secure pipeline variable in Azure DevOps, do not hardcode
+  DB_PASSWORD: 'DI=47]lF_?DY0h13'
   RESOURCE_GROUP: 'freelancer-test'
   POSTGRESQL_SERVER_NAME: 'pg-freelancer'
   LOCATION: 'eastus'

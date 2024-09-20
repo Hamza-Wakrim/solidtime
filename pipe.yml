@@ -1,13 +1,12 @@
-variables:
-  DB_CONNECTION: 'pgsql'
-  DB_HOST: 'pg-freelancer.postgres.database.azure.com'
-  DB_PORT: '5432'
-  DB_DATABASE: 'db_test'
-  DB_USERNAME: 'admin_pg_freelancer'
+variables:  
+  DB_CONNECTION: 'pgsql'  
+  DB_HOST: 'pg-freelancer.postgres.database.azure.com'  
+  DB_PORT: '5432'  
+  DB_DATABASE: 'postgres'  
+  DB_USERNAME: 'admin_pg_freelancer'  
   DB_PASSWORD: 'DI=47]lF_?DY0h13'
   RESOURCE_GROUP: 'freelancer-test'
-  POSTGRESQL_SERVER_NAME: 'pg-freelancer'
-  LOCATION: 'eastus'
+  LOCATION: 'testing-work'
 
 trigger:
   branches:
@@ -30,35 +29,20 @@ steps:
 - script: |
     composer install --no-interaction --no-progress --prefer-dist
     cp .env.example .env
-    # Replace placeholders with actual environment variables using escape for password
+    # Replace placeholders with actual environment variables
     sed -i "s/DB_CONNECTION=.*/DB_CONNECTION=$DB_CONNECTION/" .env
     sed -i "s/DB_HOST=.*/DB_HOST=$DB_HOST/" .env
     sed -i "s/DB_PORT=.*/DB_PORT=$DB_PORT/" .env
     sed -i "s/DB_DATABASE=.*/DB_DATABASE=$DB_DATABASE/" .env
     sed -i "s/DB_USERNAME=.*/DB_USERNAME=$DB_USERNAME/" .env
-    sed -i "s/DB_PASSWORD=.*/DB_PASSWORD=$(echo $DB_PASSWORD | sed 's/\//\\\//g')/" .env
+    sed -i "s/DB_PASSWORD=.*/DB_PASSWORD=$DB_PASSWORD/" .env
     php artisan key:generate
   displayName: 'Install dependencies and setup environment'
 
-# Step 3: Ensure PostgreSQL Server and Database
-# Step 3: Ensure PostgreSQL Server and Database
+# Step 3: Run migrations (If necessary)
 - script: |
-    az postgres flexible-server show --name $(POSTGRESQL_SERVER_NAME) --resource-group $(RESOURCE_GROUP) || \
-    az postgres flexible-server create \
-      --resource-group $(RESOURCE_GROUP) \
-      --name $(POSTGRESQL_SERVER_NAME) \
-      --location $(LOCATION) \
-      --admin-user $(DB_USERNAME) \
-      --admin-password '$(DB_PASSWORD)' \
-      --sku-name Standard_B1ms \
-      --version 13 \
-      --public-access 0.0.0.0
-
-    az postgres flexible-server db create \
-      --resource-group $(RESOURCE_GROUP) \
-      --server-name $(POSTGRESQL_SERVER_NAME) \
-      --database-name $(DB_DATABASE)
-  displayName: 'Create PostgreSQL Server and Database'
+    php artisan migrate --seed --force
+  displayName: 'Run Laravel Migrations'
 
 # Step 4: Copy files to the staging directory
 - task: CopyFiles@2

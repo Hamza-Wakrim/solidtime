@@ -1,7 +1,18 @@
+variables:
+  DB_CONNECTION: 'pgsql'
+  DB_HOST: 'pg-freelancer.postgres.database.azure.com'
+  DB_PORT: '5432'
+  DB_DATABASE: 'db_test'
+  DB_USERNAME: 'admin_pg_freelancer'
+  # Store DB_PASSWORD as a secure pipeline variable in Azure DevOps, do not hardcode
+  RESOURCE_GROUP: 'freelancer-test'
+  POSTGRESQL_SERVER_NAME: 'pg-freelancer'
+  LOCATION: 'eastus'
+
 trigger:
   branches:
     include:
-      - main  # Specify the branch to trigger the pipeline
+      - main
 
 pool:
   vmImage: 'ubuntu-latest'
@@ -19,17 +30,43 @@ steps:
 - script: |
     composer install --no-interaction --no-progress --prefer-dist
     cp .env.example .env
+    # Replace placeholders with actual environment variables using escape for password
+    sed -i "s/DB_CONNECTION=.*/DB_CONNECTION=$DB_CONNECTION/" .env
+    sed -i "s/DB_HOST=.*/DB_HOST=$DB_HOST/" .env
+    sed -i "s/DB_PORT=.*/DB_PORT=$DB_PORT/" .env
+    sed -i "s/DB_DATABASE=.*/DB_DATABASE=$DB_DATABASE/" .env
+    sed -i "s/DB_USERNAME=.*/DB_USERNAME=$DB_USERNAME/" .env
+    sed -i "s/DB_PASSWORD=.*/DB_PASSWORD=$(echo $DB_PASSWORD | sed 's/\//\\\//g')/" .env
     php artisan key:generate
   displayName: 'Install dependencies and setup environment'
 
-# Step 3: Copy files to the staging directory
+# Step 3: Ensure PostgreSQL Server and Database
+- script: |
+    az postgres flexible-server show --name $(POSTGRESQL_SERVER_NAME) --resource-group $(RESOURCE_GROUP) || \
+    az postgres flexible-server create \
+      --resource-group $(RESOURCE_GROUP) \
+      --name $(POSTGRESQL_SERVER_NAME) \
+      --location $(LOCATION) \
+      --admin-user $(DB_USERNAME) \
+      --admin-password $(DB_PASSWORD) \
+      --sku-name Standard_B1ms \
+      --version 13 \
+      --public-access 0.0.0.0
+
+    az postgres flexible-server db create \
+      --resource-group $(RESOURCE_GROUP) \
+      --server-name $(POSTGRESQL_SERVER_NAME) \
+      --database-name $(DB_DATABASE)
+  displayName: 'Create PostgreSQL Server and Database'
+
+# Step 4: Copy files to the staging directory
 - task: CopyFiles@2
   inputs:
     contents: '**'
     targetFolder: '$(Build.ArtifactStagingDirectory)'
   displayName: 'Copy files to staging directory'
 
-# Step 4: Archive the application files
+# Step 5: Archive the application files
 - task: ArchiveFiles@2
   inputs:
     rootFolderOrFile: '$(Build.ArtifactStagingDirectory)'
@@ -39,14 +76,14 @@ steps:
     replaceExistingArchive: true
   displayName: 'Archive application files'
 
-# Step 5: Publish the build artifacts
+# Step 6: Publish the build artifacts
 - task: PublishBuildArtifacts@1
   inputs:
     PathtoPublish: '$(Build.ArtifactStagingDirectory)'
     ArtifactName: 'drop'
   displayName: 'Publish artifact'
   
-# Step 6: Deploy to Azure Web App
+# Step 7: Deploy to Azure Web App
 - task: AzureWebApp@1
   inputs:
     azureSubscription: 'azure-connection'  # Replace with your Azure subscription name

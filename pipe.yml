@@ -1,7 +1,7 @@
 trigger:
   branches:
     include:
-      - main  # Specify the branch to trigger the pipeline
+      - main
 
 pool:
   vmImage: 'ubuntu-latest'
@@ -13,9 +13,6 @@ variables:
   DB_DATABASE: 'db_test'
   DB_USERNAME: 'admin_pg_freelancer'
   DB_PASSWORD: 'DI=47]lF_?DY0h13'
-  RESOURCE_GROUP: 'freelancer-test'
-  POSTGRESQL_SERVER_NAME: 'pg-freelancer'
-  LOCATION: 'eastus'
   AZURE_APP_NAME: 'testing-work'  # Replace with your Azure Web App name
   AZURE_SUBSCRIPTION: 'azure-connection'  # Replace with your Azure subscription name
 
@@ -66,22 +63,11 @@ steps:
     ArtifactName: 'drop'
   displayName: 'Publish artifact'
 
-# Step 6: Deploy to Azure Web App (Upload to /home/site/wwwroot/)
+# Step 6: Deploy to Azure Web App
 - task: AzureWebApp@1
   inputs:
-    azureSubscription: '$(AZURE_SUBSCRIPTION)'  # Replace with your Azure subscription name
-    appName: '$(AZURE_APP_NAME)'  # Replace with your Azure Web App name
+    azureSubscription: '$(AZURE_SUBSCRIPTION)'
+    appName: '$(AZURE_APP_NAME)'
     package: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
     deploymentMethod: 'zipDeploy'
   displayName: 'Deploy to Azure Web App'
-
-# Step 7: Check and Set file permissions in /home/site/wwwroot
-- script: |
-    if [ -d /home/site/wwwroot ]; then
-        sudo chown -R www-data:www-data /home/site/wwwroot
-        sudo chmod -R 755 /home/site/wwwroot
-    else
-        echo "Directory /home/site/wwwroot does not exist."
-        exit 1
-    fi
-  displayName: 'Set correct file permissions'

@@ -69,15 +69,19 @@ steps:
 # Step 6: Deploy to Azure Web App (Upload to /home/site/wwwroot/)
 - task: AzureWebApp@1
   inputs:
-    azureSubscription: '$(AZURE_SUBSCRIPTION)'  # Use the Azure subscription
-    appName: '$(AZURE_APP_NAME)'  # Your Azure Web App name
+    azureSubscription: '$(AZURE_SUBSCRIPTION)'  # Replace with your Azure subscription name
+    appName: '$(AZURE_APP_NAME)'  # Replace with your Azure Web App name
     package: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
     deploymentMethod: 'zipDeploy'
   displayName: 'Deploy to Azure Web App'
 
-# Step 7: (Optional) Set correct file permissions if needed (Azure might already handle this)
+# Step 7: Check and Set file permissions in /home/site/wwwroot
 - script: |
-    sudo chown -R www-data:www-data /home/site/wwwroot
-    sudo chmod -R 755 /home/site/wwwroot
+    if [ -d /home/site/wwwroot ]; then
+        sudo chown -R www-data:www-data /home/site/wwwroot
+        sudo chmod -R 755 /home/site/wwwroot
+    else
+        echo "Directory /home/site/wwwroot does not exist."
+        exit 1
+    fi
   displayName: 'Set correct file permissions'
-  condition: and(succeeded(), eq(variables['Agent.OS'], 'Linux'))  # Only run if on Linux and the previous steps succeed
